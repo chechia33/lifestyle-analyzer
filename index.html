@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作息型態分析器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        body {
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #5850ec, #4338ca);
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .step-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .step-badge {
+            background-color: #eef2ff;
+            color: #4f46e5;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        .option-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 18px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #ffffff;
+        }
+        .option-item:hover {
+            border-color: #818cf8;
+            background-color: #f8fafc;
+        }
+        .option-item.selected {
+            border-color: #4f46e5;
+            background-color: #eef2ff;
+        }
+        .option-item input[type="radio"] {
+            margin-right: 12px;
+            accent-color: #4f46e5;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .option-label {
+            font-size: 15px;
+            color: #374151;
+            font-weight: 500;
+            cursor: pointer;
+            flex: 1;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #4338ca;
+        }
+        .btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* Result Styles */
+        .result-container {
+            text-align: center;
+            display: none;
+        }
+        .result-header-text {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #5850ec, #4338ca);
+            display: inline-block;
+            padding: 8px 24px;
+            border-radius: 20px;
+        }
+        .result-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: #111827;
+            margin: 15px 0;
+        }
+        .result-desc {
+            font-size: 15px;
+            color: #4b5563;
+            line-height: 1.6;
+            background-color: #f9fafb;
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .result-advice {
+            font-size: 16px;
+            font-weight: 700;
+            color: #059669;
+            background-color: #ecfdf5;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid #a7f3d0;
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>輪到你囉</h1>
+            <p>帥帥帥帥 美美美美 水拉</p>
+        </div>
+        <div class="content">
+            <!-- Question Screen -->
+            <div id="quiz-screen">
+                <div class="step-header">
+                    <div class="step-title" id="day-title">第 1 天行程</div>
+                    <div class="step-badge" id="progress-badge">已記錄 0 / 7 天</div>
+                </div>
+                
+                <div class="options-list" id="options-container">
+                    <!-- Options populated by JS -->
+                </div>
+
+                <button class="btn" id="next-btn" disabled onclick="submitDay()">提交第 1 天</button>
+            </div>
+
+            <!-- Result Screen -->
+            <div id="result-screen" class="result-container">
+                <div class="result-header-text">寶寶是</div>
+                <div class="result-title" id="res-type"></div>
+                <div class="result-desc">
+                    <strong>簡短說明：</strong>
+                    <span id="res-desc"></span>
+                </div>
+                <div class="result-advice">
+                    <strong>建議：</strong><span id="res-advice"></span>
+                </div>
+                <button class="btn" onclick="restartQuiz()">重新測試</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const optionsData = [
+            "1. 有吃早餐",
+            "2. 早餐是下午3點吃",
+            "3. 熬夜出門爽",
+            "4. 我今天是乖寶寶晚上有去夜店讀書",
+            "5. 作息非常正常",
+            "6. 今天想幹嘛就幹嘛",
+            "7. 今日沉澱好好想明天要搞甚麼",
+            "8. 約會日(女朋友、同學、朋友媽媽.....)，讚啦"
+        ];
+
+        const resultCategories = {
+            1: {
+                title: "行為學家",
+                desc: "作息時間極度固定，習慣按部就班執行計畫。生活有強烈節奏感，高度自律且重視效率與穩定。",
+                advice: "你很帥很美，適合出去約會"
+            },
+            2: {
+                title: "觀察者",
+                desc: "精力黃金期集中在夜晚或深夜，習慣在夜深人靜時高效率產出或放鬆。白天較晚起，行程呈現「晚起晚睡、夜間爆發」特徵。",
+                advice: "你很帥很美，適合出去約會"
+            },
+            3: {
+                title: "拓荒者",
+                desc: "行程變動率高，沒有固定作息表。隨興所至、靈活應變，極度適應突發狀況，生活充滿多樣性與不確定性。",
+                advice: "你很帥很美，適合出去約會"
+            },
+            4: {
+                title: "建築師",
+                desc: "日常圍繞著具體目標或工作/學業專案旋轉。休息時間較少，行程表大部分時間被高強度的產出與待辦事項填滿。",
+                advice: "你很帥很美，適合出去約會"
+            },
+            5: {
+                title: "協調者",
+                desc: "生活重心包含大量的社交互動、聚會、團隊合作或家庭活動。活動力來自與他人的連結，單獨處於安靜狀態的時間相對較少。",
+                advice: "你很帥很美，適合出去約會"
+            },
+            6: {
+                title: "哲學家",
+                desc: "重視個人空間、休息質量與心靈放鬆。行程排得相對寬鬆，注重生活與工作的平衡，留白時間較多。",
+                advice: "你很帥很美，適合出去約會"
+            }
+        };
+
+        let currentDay = 1;
+        let userChoices = [];
+        let selectedOptionForCurrentDay = null;
+
+        function renderDay() {
+            document.getElementById('day-title').innerText = `第 ${currentDay} 天行程`;
+            document.getElementById('progress-badge').innerText = `已記錄 ${currentDay - 1} / 7 天`;
+            document.getElementById('next-btn').innerText = `提交第 ${currentDay} 天`;
+            document.getElementById('next-btn').disabled = true;
+            selectedOptionForCurrentDay = null;
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            optionsData.forEach((optText, index) => {
+                const optNum = index + 1;
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'option-item';
+                itemDiv.onclick = () => selectOption(optNum, itemDiv);
+
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'day-option';
+                radio.value = optNum;
+                radio.id = `opt-${optNum}`;
+
+                const label = document.createElement('label');
+                label.className = 'option-label';
+                label.htmlFor = `opt-${optNum}`;
+                label.innerText = optText;
+
+                itemDiv.appendChild(radio);
+                itemDiv.appendChild(label);
+                container.appendChild(itemDiv);
+            });
+        }
+
+        function selectOption(optNum, element) {
+            selectedOptionForCurrentDay = optNum;
+            document.querySelectorAll('.option-item').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            element.querySelector('input[type="radio"]').checked = true;
+            document.getElementById('next-btn').disabled = false;
+        }
+
+        function submitDay() {
+            if (!selectedOptionForCurrentDay) return;
+            userChoices.push(selectedOptionForCurrentDay);
+
+            if (currentDay < 7) {
+                currentDay++;
+                renderDay();
+            } else {
+                calculateAndShowResult();
+            }
+        }
+
+        function calculateAndShowResult() {
+            const counts = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0};
+            userChoices.forEach(choice => {
+                counts[choice] = (counts[choice] || 0) + 1;
+            });
+
+            const scores = {
+                1: counts[1] + counts[5],
+                2: counts[3],
+                3: counts[6] + counts[2],
+                4: counts[4],
+                5: counts[8],
+                6: counts[7]
+            };
+
+            let maxScore = -1;
+            for (let cat in scores) {
+                if (scores[cat] > maxScore) {
+                    maxScore = scores[cat];
+                }
+            }
+
+            const topCategories = [];
+            for (let cat in scores) {
+                if (scores[cat] === maxScore) {
+                    topCategories.push(parseInt(cat));
+                }
+            }
+
+            const finalCategory = topCategories[Math.floor(Math.random() * topCategories.length)];
+            const resultData = resultCategories[finalCategory];
+
+            document.getElementById('res-type').innerText = resultData.title;
+            document.getElementById('res-desc').innerText = resultData.desc;
+            document.getElementById('res-advice').innerText = resultData.advice;
+
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+        }
+
+        function restartQuiz() {
+            currentDay = 1;
+            userChoices = [];
+            document.getElementById('quiz-screen').style.display = 'block';
+            document.getElementById('result-screen').style.display = 'none';
+            renderDay();
+        }
+
+        renderDay();
+    </script>
+</body>
+</html>
